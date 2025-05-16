@@ -104,7 +104,7 @@ export function loginWithGoogle(): void {
 /**
  * Handles OAuth callback from providers
  */
-export async function handleAuthCallback(provider: 'github' | 'google', code: string, state: string): Promise<User> {
+export async function handleAuthCallback(provider: 'github' | 'google', _code: string, state: string): Promise<User> {
   // Verify state to prevent CSRF attacks
   const savedState = localStorage.getItem(`auth-state-${provider}`);
   if (!savedState || savedState !== state) {
