@@ -1,5 +1,5 @@
 import { ThemeProvider } from '@/components/theme-provider';
-import { MainCodeEditor } from '@/components/main-code-editor';
+import { DockerCodeEditor } from '@/components/docker-code-editor';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/auth-context';
 import { AuthPrompt } from '@/components/auth/auth-prompt';
@@ -15,7 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={
               <main className="min-h-screen bg-background">
-                <MainCodeEditor />
+                <DockerCodeEditor />
                 <Toaster />
                 <AuthPrompt />
               </main>

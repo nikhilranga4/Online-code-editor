@@ -117,4 +117,157 @@ public class Main {
 </body>
 </html>
 `
+,
+
+  cpp: `// Welcome to C++!
+// This is a comment - the computer ignores this line
+
+#include <iostream>
+
+int main() {
+    // Let's print a message:
+    std::cout << "Hello, World!" << std::endl;
+    
+    // We can also define variables:
+    std::string name = "Coder";
+    std::cout << "Hello, " << name << "!" << std::endl;
+    
+    // Let's try a simple function:
+    std::string greeting = greet("Awesome Coder");
+    std::cout << greeting << std::endl;
+    
+    return 0;
+}
+
+// This is a function in C++
+std::string greet(std::string person) {
+    return "Hello, " + person + "!";
+}
+`,
+
+  c: `// Welcome to C!
+// This is a comment - the computer ignores this line
+
+#include <stdio.h>
+#include <string.h>
+
+// Function declaration
+char* greet(const char* person);
+
+int main() {
+    // Let's print a message:
+    printf("Hello, World!\n");
+    
+    // We can also define variables:
+    const char* name = "Coder";
+    printf("Hello, %s!\n", name);
+    
+    // Let's try a simple function:
+    char* greeting = greet("Awesome Coder");
+    printf("%s\n", greeting);
+    
+    return 0;
+}
+
+// This is a function in C
+char* greet(const char* person) {
+    static char greeting[100];
+    sprintf(greeting, "Hello, %s!", person);
+    return greeting;
+}
+`,
+
+  go: `// Welcome to Go!
+// This is a comment - the computer ignores this line
+
+package main
+
+import "fmt"
+
+// This is a function in Go
+func greet(person string) string {
+    return "Hello, " + person + "!"
+}
+
+func main() {
+    // Let's print a message:
+    fmt.Println("Hello, World!")
+    
+    // We can also define variables:
+    name := "Coder"
+    fmt.Println("Hello, " + name + "!")
+    
+    // Let's try a simple function:
+    greeting := greet("Awesome Coder")
+    fmt.Println(greeting)
+}
+`,
+
+  ruby: `# Welcome to Ruby!
+# This is a comment - the computer ignores this line
+
+# Let's print a message:
+puts "Hello, World!"
+
+# We can also define variables:
+name = "Coder"
+puts "Hello, #{name}!"
+
+# Let's try a simple function:
+def greet(person)
+  "Hello, #{person}!"
+end
+
+# Now we'll call our function
+greeting = greet("Awesome Coder")
+puts greeting
+
+# Try editing this code and running it!
+`,
+
+  rust: `// Welcome to Rust!
+// This is a comment - the computer ignores this line
+
+// This is a function in Rust
+fn greet(person: &str) -> String {
+    format!("Hello, {}!", person)
+}
+
+fn main() {
+    // Let's print a message:
+    println!("Hello, World!");
+    
+    // We can also define variables:
+    let name = "Coder";
+    println!("Hello, {}!", name);
+    
+    // Let's try a simple function:
+    let greeting = greet("Awesome Coder");
+    println!("{}", greeting);
+}
+`,
+
+  php: `<?php
+// Welcome to PHP!
+// This is a comment - the computer ignores this line
+
+// Let's print a message:
+echo "Hello, World!\n";
+
+// We can also define variables:
+$name = "Coder";
+echo "Hello, $name!\n";
+
+// Let's try a simple function:
+function greet($person) {
+    return "Hello, $person!";
+}
+
+// Now we'll call our function
+$greeting = greet("Awesome Coder");
+echo $greeting . "\n";
+
+// Try editing this code and running it!
+?>
+`
 };

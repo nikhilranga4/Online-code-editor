@@ -75,8 +75,8 @@ export function AuthDialog({ trigger, defaultOpen = false, defaultTab = 'login',
         </DialogHeader>
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="login" className="text-black">Login</TabsTrigger>
+            <TabsTrigger value="signup" className="text-black">Sign Up</TabsTrigger>
           </TabsList>
           <TabsContent value="login">
             <LoginForm onSuccess={() => setOpen(false)} />

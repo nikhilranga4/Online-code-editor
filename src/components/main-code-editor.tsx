@@ -108,7 +108,7 @@ export function MainCodeEditor() {
           )}>
             <div className="bg-card/50 backdrop-blur-sm p-3 border-b border-border flex items-center justify-between">
               <LanguageSelector 
-                selectedLanguage={language} 
+                value={language} 
                 onChange={handleLanguageChange} 
               />
               <div className="flex items-center space-x-2">
