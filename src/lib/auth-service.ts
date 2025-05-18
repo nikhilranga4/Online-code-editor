@@ -1,5 +1,8 @@
 import { User } from '@/types/user';
 
+// Backend API URL
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 // OAuth configuration
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -13,53 +16,62 @@ const TOKEN_STORAGE_KEY = 'online-compiler-token';
  * Handles authentication with email/password
  */
 export async function loginWithEmail(email: string, password: string): Promise<User> {
-  // In a real app, this would make an API call to your backend
-  // For demo purposes, we're simulating a successful login
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
-  
-  if (!email || !password) {
-    throw new Error('Email and password are required');
+  try {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Login failed');
+    }
+
+    const data = await response.json();
+    
+    // Save user and token to local storage
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+    localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+    
+    return data.user;
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
   }
-  
-  // Create a mock user
-  const user: User = {
-    id: `user-${Date.now()}`,
-    email,
-    provider: 'email'
-  };
-  
-  // Save user to local storage
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  localStorage.setItem(TOKEN_STORAGE_KEY, `mock-token-${Date.now()}`);
-  
-  return user;
 }
 
 /**
  * Handles user registration with email/password
  */
 export async function signupWithEmail(email: string, password: string, name?: string): Promise<User> {
-  // In a real app, this would make an API call to your backend
-  // For demo purposes, we're simulating a successful signup
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
-  
-  if (!email || !password) {
-    throw new Error('Email and password are required');
+  try {
+    const response = await fetch(`${API_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password, name }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Registration failed');
+    }
+
+    const data = await response.json();
+    
+    // Save user and token to local storage
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+    localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+    
+    return data.user;
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
   }
-  
-  // Create a mock user
-  const user: User = {
-    id: `user-${Date.now()}`,
-    email,
-    name,
-    provider: 'email'
-  };
-  
-  // Save user to local storage
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  localStorage.setItem(TOKEN_STORAGE_KEY, `mock-token-${Date.now()}`);
-  
-  return user;
 }
 
 /**
@@ -104,43 +116,39 @@ export function loginWithGoogle(): void {
 /**
  * Handles OAuth callback from providers
  */
-export async function handleAuthCallback(provider: 'github' | 'google', _code: string, state: string): Promise<User> {
+export async function handleAuthCallback(provider: 'github' | 'google', code: string, state: string): Promise<User> {
   // Verify state to prevent CSRF attacks
   const savedState = localStorage.getItem(`auth-state-${provider}`);
   if (!savedState || savedState !== state) {
     throw new Error('Invalid state parameter. Authentication failed.');
   }
   
-  // In a real app, you would exchange the code for a token with your backend
-  // For demo purposes, we're simulating a successful authentication
-  await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API delay
-  
-  // Create a mock user based on the provider
-  let user: User;
-  
-  if (provider === 'github') {
-    user = {
-      id: `github-${Date.now()}`,
-      email: 'github-user@example.com',
-      name: 'GitHub User',
-      photoURL: 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-      provider: 'github'
-    };
-  } else {
-    user = {
-      id: `google-${Date.now()}`,
-      email: 'google-user@example.com',
-      name: 'Google User',
-      photoURL: 'https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png',
-      provider: 'google'
-    };
+  try {
+    // Exchange code for token with backend
+    const response = await fetch(`${API_URL}/api/auth/${provider}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `${provider} authentication failed`);
+    }
+
+    const data = await response.json();
+    
+    // Save user and token to local storage
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+    localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+    
+    return data.user;
+  } catch (error) {
+    console.error(`${provider} callback error:`, error);
+    throw error;
   }
-  
-  // Save user to local storage
-  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-  localStorage.setItem(TOKEN_STORAGE_KEY, `mock-token-${Date.now()}`);
-  
-  return user;
 }
 
 /**

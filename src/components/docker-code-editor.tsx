@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
 import { predefinedSnippets } from '@/lib/predefined-snippets';
 import { AuthDialog } from './auth/auth-dialog';
+import { saveCodeSnippet, loadCodeSnippet } from '@/lib/code-storage-service';
 
 // Use predefined snippets from the imported file
 // These are more detailed examples for each language
@@ -39,35 +40,39 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
 
   // Update code when language changes - only on initial load
   useEffect(() => {
-    // Only set the code if this is the first load for this language
-    const savedCode = isAuthenticated && user 
-      ? localStorage.getItem(`code-${language}-${user.id}`)
-      : localStorage.getItem(`code-${language}`);
+    const loadCode = async () => {
+      try {
+        // Load code from database or localStorage
+        const savedCode = await loadCodeSnippet(language, user);
+        setCode(savedCode);
+      } catch (error) {
+        console.error('Failed to load code:', error);
+        // Fallback to default template
+        setCode(codeTemplates[language]);
+      }
+    };
     
-    if (savedCode) {
-      setCode(savedCode);
-    } else {
-      setCode(codeTemplates[language]);
-    }
-  }, [language]);
+    loadCode();
+  }, [language, user, isAuthenticated]);
 
   // Handle language change
-  const handleLanguageChange = (newLanguage: ProgrammingLanguage) => {
-    // Check if the current code has been modified from the template or saved code
-    const savedCode = isAuthenticated && user 
-      ? localStorage.getItem(`code-${language}-${user.id}`)
-      : localStorage.getItem(`code-${language}`);
-    
-    const currentTemplate = savedCode || codeTemplates[language];
-    
-    // Ask for confirmation if code has been modified from the saved/template version
-    if (code !== currentTemplate) {
-      const confirmed = window.confirm('Changing language will reset your code. Continue?');
-      if (!confirmed) return;
+  const handleLanguageChange = async (newLanguage: ProgrammingLanguage) => {
+    try {
+      // Load the current saved code to check if the code has been modified
+      const savedCode = await loadCodeSnippet(language, user);
+      
+      // If code has been modified, save it before switching languages
+      if (code !== savedCode) {
+        await saveCodeSnippet(language, code, user);
+      }
+      
+      // Update language state
+      setLanguage(newLanguage);
+    } catch (error) {
+      console.error('Error during language change:', error);
+      // Still update the language even if there's an error
+      setLanguage(newLanguage);
     }
-    
-    // Set the new language
-    setLanguage(newLanguage);
     
     // Show preview automatically when HTML is selected
     if (newLanguage === 'html') {
@@ -261,14 +266,22 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
     setOutput([]);
   };
 
-  // Save code to localStorage
+  // Save code when it changes
   useEffect(() => {
-    if (isAuthenticated && user) {
-      localStorage.setItem(`code-${language}-${user.id}`, code);
-    } else {
-      localStorage.setItem(`code-${language}`, code);
-    }
-  }, [code, language, isAuthenticated, user]);
+    // Don't save on initial load
+    if (code === codeTemplates[language]) return;
+    
+    // Debounce to avoid excessive saves
+    const saveTimer = setTimeout(async () => {
+      try {
+        await saveCodeSnippet(language, code, user);
+      } catch (error) {
+        console.error('Failed to save code:', error);
+      }
+    }, 1000);
+    
+    return () => clearTimeout(saveTimer);
+  }, [code, language, user]);
 
   // Load code from localStorage on initial component mount
   useEffect(() => {
