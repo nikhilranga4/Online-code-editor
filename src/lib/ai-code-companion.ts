@@ -652,6 +652,7 @@ class AICodeCompanion {
       
       const url = `${API_URL}/api/learning/challenges/${challengeId}/submit`;
       console.log('Submitting to URL:', url);
+      console.log('Request headers:', JSON.stringify(headers));
       
       const response = await fetch(url, {
         method: 'POST',
@@ -659,8 +660,20 @@ class AICodeCompanion {
         body: JSON.stringify({ code })
       });
 
-      if (response.ok) {
+      console.log('Response status:', response.status);
+      
+      // If there's no valid response, try to analyze the code locally
+      if (!response.ok) {
+        console.warn('Server response not OK, status:', response.status);
+        console.warn('Attempting to generate local feedback');
+        
+        // Generate basic feedback for the code without server
+        return this.generateLocalFeedback(code, challengeId);
+      }
+      
+      try {
         const feedback = await response.json();
+        console.log('Received feedback from server:', feedback);
         
         // Update user progress if the user is logged in
         if (this.user && this.userProgress) {
@@ -688,37 +701,112 @@ class AICodeCompanion {
         }
         
         return feedback;
+      } catch (parseError) {
+        console.error('Error parsing response JSON:', parseError);
+        return this.generateLocalFeedback(code, challengeId);
       }
-      
-      return {
-        score: 0,
-        suggestions: ['Failed to submit solution. Please try again.'],
-        conceptsApplied: [],
-        conceptsMissing: [],
-        timeComplexity: 'Unknown',
-        spaceComplexity: 'Unknown',
-        readabilityScore: 0,
-        bestPractices: {
-          followed: [],
-          missed: []
-        }
-      };
     } catch (error) {
       console.error('Failed to submit challenge solution:', error);
+      return this.generateLocalFeedback(code, challengeId);
+    }
+  }
+  
+  /**
+   * Generate basic feedback locally when server submission fails
+   */
+  private generateLocalFeedback(code: string, challengeId: string): CodeFeedback {
+    console.log('Generating local feedback for challenge:', challengeId);
+    
+    // Basic code validation
+    if (!code || code.trim().length === 0) {
       return {
         score: 0,
-        suggestions: ['An error occurred while submitting your solution.'],
+        suggestions: ['Your solution is empty. Please write some code to solve the challenge.'],
         conceptsApplied: [],
         conceptsMissing: [],
-        timeComplexity: 'Unknown',
-        spaceComplexity: 'Unknown',
+        timeComplexity: 'N/A',
+        spaceComplexity: 'N/A',
         readabilityScore: 0,
         bestPractices: {
           followed: [],
-          missed: []
+          missed: ['Code implementation']
         }
       };
     }
+    
+    // Check for basic Python syntax
+    const hasSyntaxErrors = this.checkForBasicSyntaxErrors(code);
+    if (hasSyntaxErrors) {
+      return {
+        score: 20,
+        suggestions: [
+          'Your code appears to have syntax errors.',
+          'Make sure all parentheses, brackets, and quotes are properly closed.',
+          'Check indentation in your Python code.'
+        ],
+        conceptsApplied: ['Python basics'],
+        conceptsMissing: ['Code structure', 'Syntax correctness'],
+        timeComplexity: 'N/A',
+        spaceComplexity: 'N/A',
+        readabilityScore: 30,
+        bestPractices: {
+          followed: ['Attempt at solving the problem'],
+          missed: ['Syntax correctness']
+        }
+      };
+    }
+    
+    // Basic positive feedback for code that looks reasonable
+    return {
+      score: 50,
+      suggestions: [
+        'Your solution has been analyzed locally as the server connection failed.',
+        'Consider adding comments to explain your approach.',
+        'Make sure your solution handles all test cases.'
+      ],
+      conceptsApplied: ['Python basics', 'Problem-solving'],
+      conceptsMissing: [],
+      timeComplexity: 'Unknown (local analysis)',
+      spaceComplexity: 'Unknown (local analysis)',
+      readabilityScore: 60,
+      bestPractices: {
+        followed: ['Code structure', 'Python syntax'],
+        missed: []
+      }
+    };
+  }
+  
+  /**
+   * Check for basic syntax errors in Python code
+   */
+  private checkForBasicSyntaxErrors(code: string): boolean {
+    // Check for mismatched parentheses
+    const openParens = (code.match(/\(/g) || []).length;
+    const closeParens = (code.match(/\)/g) || []).length;
+    if (openParens !== closeParens) {
+      return true;
+    }
+    
+    // Check for mismatched brackets
+    const openBrackets = (code.match(/\[/g) || []).length;
+    const closeBrackets = (code.match(/\]/g) || []).length;
+    if (openBrackets !== closeBrackets) {
+      return true;
+    }
+    
+    // Check for mismatched braces
+    const openBraces = (code.match(/\{/g) || []).length;
+    const closeBraces = (code.match(/\}/g) || []).length;
+    if (openBraces !== closeBraces) {
+      return true;
+    }
+    
+    // Check for common Python syntax patterns
+    if (code.includes('def') && !code.includes(':')) {
+      return true; // Missing colon after function definition
+    }
+    
+    return false; // No obvious syntax errors detected
   }
 
   /**

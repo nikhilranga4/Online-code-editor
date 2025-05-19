@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Play, Loader2, RefreshCw,  User, Minimize2, BookOpen } from 'lucide-react';
+import { Play, Loader2, RefreshCw, User, BookOpen } from 'lucide-react';
 import { MonacoCodeEditor } from './monaco-code-editor';
 import { Terminal } from './terminal';
 import { InteractiveTerminal } from './interactive-terminal';
-import { HtmlPreview } from './html-preview';
 import { InputDialog } from './input-dialog';
 import { LanguageSelector, ProgrammingLanguage } from './language-selector';
 import { executeCode } from '@/lib/docker-service';
@@ -34,7 +33,6 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
   const [activeTab, setActiveTab] = useState<string>('output');
   const [showLearningPanel, setShowLearningPanel] = useState<boolean>(false);
   const [terminalExpanded, setTerminalExpanded] = useState<boolean>(false);
-  const [showPreview, setShowPreview] = useState<boolean>(false);
   const [userInput, setUserInput] = useState<string>('');
   const [showInputDialog, setShowInputDialog] = useState<boolean>(false);
   const [needsInput, setNeedsInput] = useState<boolean>(false);
@@ -76,12 +74,7 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
       setLanguage(newLanguage);
     }
     
-    // Show preview automatically when HTML is selected
-    if (newLanguage === 'html') {
-      setShowPreview(true);
-    } else {
-      setShowPreview(false);
-    }
+    // No HTML preview functionality needed for Python
   };
 
   // Check if code might need input - with typo tolerance
@@ -350,17 +343,7 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
             Clear
           </Button>
           
-          {/* Toggle HTML Preview button - only shown for HTML language */}
-          {language === 'html' && (
-            <Button
-              onClick={() => setShowPreview(!showPreview)}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              {showPreview ? 'Show Terminal' : 'Show Preview'}
-            </Button>
-          )}
+          {/* HTML preview removed as we only support Python now */}
         </div>
         
         <div className="flex items-center gap-4">
@@ -405,28 +388,7 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
           "flex flex-col",
           terminalExpanded ? "fixed inset-0 z-50 p-4 bg-background/95 backdrop-blur-sm" : "h-full"
         )}>
-          {/* Show HTML Preview for HTML/CSS code */}
-          {language === 'html' && showPreview ? (
-            <Card className="h-full shadow-md border-muted overflow-hidden">
-              <CardContent className="p-0 h-full flex flex-col">
-                <div className="flex items-center justify-between bg-muted/50 px-2 py-1 border-b">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium px-2">HTML Preview</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => setShowPreview(false)}
-                    title="Show Terminal"
-                  >
-                    <Minimize2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <HtmlPreview htmlContent={code} />
-              </CardContent>
-            </Card>
-          ) : (
+          {/* Output/Terminal Section */}
           <Card className="h-full shadow-md border-muted overflow-hidden">
             <CardContent className="p-0 h-full flex flex-col">
               <Tabs 
@@ -455,7 +417,6 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
               </Tabs>
             </CardContent>
           </Card>
-          )}
         </div>
       </div>
       

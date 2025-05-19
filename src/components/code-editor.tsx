@@ -15,7 +15,7 @@ export function CodeEditor({ value, onChange, language }: CodeEditorProps) {
   
   // Update suggestions when user types or moves cursor
   const updateSuggestions = (position: number) => {
-    const newSuggestion = getSuggestions(value, position, language);
+    const newSuggestion = getSuggestions(value, position);
     setSuggestion(newSuggestion);
   };
   

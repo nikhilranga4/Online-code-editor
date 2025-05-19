@@ -11,7 +11,7 @@ import { predefinedSnippets } from '@/lib/predefined-snippets';
 import { cn } from '@/lib/utils';
 
 export function MainCodeEditor() {
-  const [language, setLanguage] = useState<ProgrammingLanguage>('javascript');
+  const [language, setLanguage] = useState<ProgrammingLanguage>('python');
   const [code, setCode] = useState<string>('');
   const [terminalOutput, setTerminalOutput] = useState<TerminalOutput[]>([]);
   const [isRunning, setIsRunning] = useState(false);
@@ -54,7 +54,7 @@ export function MainCodeEditor() {
     
     try {
       saveSnippet(language, code);
-      const result = await runCode(code, language);
+      const result = await runCode(code);
       
       setTerminalOutput([
         { type: 'command', content: `Running ${language} code...` },

@@ -1,52 +1,52 @@
-import { ProgrammingLanguage } from "@/components/language-selector";
+// ProgrammingLanguage import removed as we now only support Python
 
 /**
- * Provides beginner-friendly explanations for common coding errors
+ * Provide a user-friendly explanation for common Python error messages
  */
-export function explainError(errorMessage: string, language: ProgrammingLanguage): string {
+export function explainError(errorMessage: string): string {
   const lowerErrorMsg = errorMessage.toLowerCase();
   
-  // Common JavaScript errors
-  if (language === 'javascript') {
-    if (lowerErrorMsg.includes('is not defined')) {
-      return "You're trying to use a variable that hasn't been created yet. Check if you spelled the variable name correctly and make sure you declared it before using it.";
-    }
-    
-    if (lowerErrorMsg.includes('unexpected token')) {
-      return "There's a syntax error in your code. This often happens when you're missing a parenthesis, bracket, or have an extra one. Check your code for matching pairs of (, ), {, }, [, ].";
-    }
-    
-    if (lowerErrorMsg.includes('cannot read property') || lowerErrorMsg.includes('cannot read properties')) {
-      return "You're trying to access a property of something that doesn't exist or is undefined. Make sure the object exists before trying to use its properties.";
-    }
-    
-    if (lowerErrorMsg.includes('is not a function')) {
-      return "You're trying to call something as a function, but it's not actually a function. Check the spelling and make sure you're using parentheses only on actual functions.";
-    }
+  // Python errors
+  if (lowerErrorMsg.includes('nameerror') || lowerErrorMsg.includes('name') && lowerErrorMsg.includes('is not defined')) {
+    return "You're trying to use a variable that hasn't been created yet. Check if you spelled the variable name correctly and make sure you defined it before using it.";
   }
   
-  // Common Python errors (simulated)
-  if (language === 'python') {
-    if (lowerErrorMsg.includes('nameerror')) {
-      return "You're trying to use a variable that doesn't exist. In Python, variable names are case-sensitive, so make sure you've spelled it correctly.";
-    }
-    
-    if (lowerErrorMsg.includes('syntaxerror')) {
-      return "There's a syntax error in your code. This could be due to missing colons after if/for/while statements, incorrect indentation, or unmatched parentheses.";
-    }
-    
-    if (lowerErrorMsg.includes('indentationerror')) {
-      return "Python uses indentation to define code blocks. Make sure your indentation is consistent (using either spaces or tabs, but not both).";
-    }
+  if (lowerErrorMsg.includes('syntaxerror') || lowerErrorMsg.includes('invalid syntax')) {
+    return "There's a syntax error in your code. This often happens when you're missing a colon, parenthesis, or have incorrect indentation. Check your code carefully.";
   }
   
-  // Common HTML errors
-  if (language === 'html') {
-    if (lowerErrorMsg.includes('tag')) {
-      return "There might be an issue with your HTML tags. Make sure all tags are properly closed and nested correctly.";
-    }
+  if (lowerErrorMsg.includes('indentationerror')) {
+    return "Python uses indentation (spaces at the beginning of lines) to define code blocks. Make sure your indentation is consistent and that you're using the same number of spaces for each level.";
   }
   
-  // Generic explanation if no specific error is recognized
-  return "Don't worry about errors - they're how we learn! Try reading the error message carefully and look at the line number mentioned to find where the problem might be.";
+  if (lowerErrorMsg.includes('typeerror')) {
+    return "You're trying to perform an operation on a value of the wrong type. For example, trying to add a string and a number without converting them.";
+  }
+  
+  if (lowerErrorMsg.includes('indexerror') || lowerErrorMsg.includes('index out of range')) {
+    return "You're trying to access an element in a list or string using an index that doesn't exist. Remember that indexing starts at 0, and make sure you're not trying to access beyond the end of the list.";
+  }
+  
+  if (lowerErrorMsg.includes('keyerror')) {
+    return "You're trying to access a dictionary using a key that doesn't exist. Check the spelling of your key or use the .get() method to provide a default value.";
+  }
+  
+  if (lowerErrorMsg.includes('attributeerror')) {
+    return "You're trying to access an attribute or method that doesn't exist for this object. Check the spelling and make sure the object has this attribute.";
+  }
+  
+  if (lowerErrorMsg.includes('valueerror')) {
+    return "You're providing a value of the right type but inappropriate value to a function. For example, trying to convert a non-numeric string to an integer.";
+  }
+  
+  if (lowerErrorMsg.includes('modulenotfounderror') || lowerErrorMsg.includes('no module named')) {
+    return "Python can't find the module you're trying to import. Check the spelling and make sure the module is installed.";
+  }
+  
+  if (lowerErrorMsg.includes('zerodivisionerror')) {
+    return "You're trying to divide by zero, which is not allowed in mathematics. Check your division operations and make sure the denominator is never zero.";
+  }
+  
+  // Generic fallback explanation
+  return "There's an error in your code. Try reading the error message carefully and checking the line it mentions for issues.";
 }

@@ -12,16 +12,7 @@ interface MonacoCodeEditorProps {
 
 // Map our language types to Monaco's language identifiers
 const languageMap: Record<ProgrammingLanguage, string> = {
-  javascript: 'javascript',
   python: 'python',
-  java: 'java',
-  cpp: 'cpp',
-  c: 'c',
-  go: 'go',
-  ruby: 'ruby',
-  rust: 'rust',
-  php: 'php',
-  html: 'html'
 };
 
 export function MonacoCodeEditor({ value, onChange, language, className }: MonacoCodeEditorProps) {
