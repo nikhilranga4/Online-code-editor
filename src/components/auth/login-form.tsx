@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/auth-context';
 import { GithubIcon } from 'lucide-react';
 
@@ -23,6 +24,7 @@ interface LoginFormProps {
 export function LoginForm({ onSuccess }: LoginFormProps) {
   const { login, loginWithGithub, loginWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -35,10 +37,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const onSubmit = async (data: LoginFormValues) => {
     try {
       setIsLoading(true);
+      setError(null); // Clear previous errors
       await login(data.email, data.password);
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
+      // Extract error message
+      const errorMessage = error?.message || 'Login failed';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -47,10 +53,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const handleGithubLogin = () => {
     try {
       setIsLoading(true);
+      setError(null); // Clear previous errors
       loginWithGithub(); // This will redirect to GitHub
       // Note: onSuccess will not be called here since we're redirecting
-    } catch (error) {
+    } catch (error: any) {
       console.error('GitHub login failed:', error);
+      setError(error?.message || 'GitHub login failed');
       setIsLoading(false);
     }
   };
@@ -58,16 +66,23 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const handleGoogleLogin = () => {
     try {
       setIsLoading(true);
+      setError(null); // Clear previous errors
       loginWithGoogle(); // This will redirect to Google
       // Note: onSuccess will not be called here since we're redirecting
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google login failed:', error);
+      setError(error?.message || 'Google login failed');
       setIsLoading(false);
     }
   };
 
   return (
     <div className="space-y-4 py-2">
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField

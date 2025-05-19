@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-export type ProgrammingLanguage = 'javascript' | 'python' | 'html' | 'java' | 'cpp' | 'c' | 'go' | 'ruby' | 'rust' | 'php';
+export type ProgrammingLanguage = 'python';
 
 export interface LanguageSelectorProps {
   value: ProgrammingLanguage;
@@ -25,16 +25,7 @@ export function LanguageSelector({ value, onChange }: LanguageSelectorProps) {
           <SelectValue placeholder="Select a language" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="javascript">JavaScript</SelectItem>
           <SelectItem value="python">Python</SelectItem>
-          <SelectItem value="java">Java</SelectItem>
-          <SelectItem value="cpp">C++</SelectItem>
-          <SelectItem value="c">C</SelectItem>
-          <SelectItem value="go">Go</SelectItem>
-          <SelectItem value="ruby">Ruby</SelectItem>
-          <SelectItem value="rust">Rust</SelectItem>
-          <SelectItem value="php">PHP</SelectItem>
-          <SelectItem value="html">HTML/CSS</SelectItem>
         </SelectContent>
       </Select>
     </div>

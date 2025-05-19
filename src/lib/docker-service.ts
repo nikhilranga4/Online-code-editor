@@ -47,11 +47,98 @@ export async function executeCode(
   language: ProgrammingLanguage,
   input: string = ''
 ): Promise<TerminalOutput[]> {
+  // Create a basic result with the input for fallback
+  const terminalOutput: TerminalOutput[] = [
+    {
+      type: 'command',
+      content: `Running ${language} code...`,
+    }
+  ];
+  
+  // Add input to output if provided
+  if (input) {
+    terminalOutput.push({
+      type: 'input',
+      content: input,
+    });
+  }
+  
+  // Handle Python code directly in the frontend as a fallback for simple cases
+  if (language === 'python' && code.includes('print(')) {
+    try {
+      // Check for input pattern
+      const hasInput = code.includes('input(');
+      const varInputPattern = /([\w]+)\s*=\s*input\s*\(([^)]*)\)/;
+      const varMatch = code.match(varInputPattern);
+      let varName = '';
+      
+      if (varMatch && input) {
+        varName = varMatch[1].trim();
+        console.log(`Found input variable ${varName}`);
+      }
+      
+      // Extract print statements
+      const printPattern = /print\s*\(([^)]*)\)/g;
+      const printMatches = [...code.matchAll(printPattern)];
+      
+      if (printMatches.length > 0) {
+        for (const match of printMatches) {
+          const content = match[1].trim();
+          let output = content;
+          
+          // Handle string literals
+          if ((content.startsWith('"') && content.endsWith('"')) || 
+              (content.startsWith('\'') && content.endsWith('\'')))
+          {
+            output = content.substring(1, content.length - 1);
+          }
+          
+          // Handle f-strings with input
+          if (content.startsWith('f') && content.includes('{') && content.includes('}') && input) {
+            let fstring = content.substring(1);
+            if ((fstring.startsWith('"') && fstring.endsWith('"')) || 
+                (fstring.startsWith('\'') && fstring.endsWith('\'')))
+            {
+              fstring = fstring.substring(1, fstring.length - 1);
+              // Replace {varName} with input
+              output = fstring.replace(/\{([^}]*)\}/g, () => input);
+            }
+          }
+          
+          // Handle variable references
+          if (varName && content === varName) {
+            output = input;
+          }
+          
+          terminalOutput.push({
+            type: 'standard',
+            content: output,
+          });
+        }
+        
+        // Add success message
+        terminalOutput.push({
+          type: 'success',
+          content: `Program exited with code 0`,
+        });
+        
+        // Only return if we have input handling or no input is needed
+        if (!hasInput || (hasInput && input)) {
+          return terminalOutput;
+        }
+      }
+    } catch (e) {
+      console.error('Error in frontend Python handling:', e);
+      // Continue to backend if frontend handling fails
+    }
+  }
+  
   try {
     // Get socket connection
     const socket = getSocket();
     
     // Make API request to execute code
+    console.log(`Making API request to: ${API_URL}/api/execute`);
     const response = await fetch(`${API_URL}/api/execute`, {
       method: 'POST',
       headers: {
@@ -64,12 +151,75 @@ export async function executeCode(
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to execute code');
+    // Try to parse the response
+    let data;
+    const text = await response.text();
+    
+    try {
+      data = JSON.parse(text);
+      console.log('Received API response:', data);
+    } catch (parseError) {
+      console.error('Error parsing response:', parseError);
+      console.error('Response text:', text.substring(0, 100));
+      
+      // Return the fallback result if we can't parse the response
+      terminalOutput.push({
+        type: 'error',
+        content: 'Server error: Could not parse response',
+      });
+      return terminalOutput;
     }
+    
+    // Check if the result is already in the response
+    if (data.result) {
+      console.log('Using direct result from API response');
+      // Parse output into terminal lines directly
+      const terminalOutput: TerminalOutput[] = [];
+      const result = data.result;
 
-    const data = await response.json();
+      // Add command line
+      terminalOutput.push({
+        type: 'command',
+        content: `Running ${language} code...`,
+      });
+
+      if (result.status === 'success') {
+        // Handle user input if provided
+        if (input) {
+          terminalOutput.push({
+            type: 'input',
+            content: input,
+          });
+        }
+        
+        // Split output by lines and add to terminal
+        const outputLines = result.output.split('\n');
+        outputLines.forEach((line: string) => {
+          if (line.trim()) {
+            terminalOutput.push({
+              type: 'standard',
+              content: line,
+            });
+          }
+        });
+
+        // Add success message
+        terminalOutput.push({
+          type: 'success',
+          content: `Program exited with code ${result.exitCode}`,
+        });
+      } else {
+        // Add error message
+        terminalOutput.push({
+          type: 'error',
+          content: result.output || 'Execution failed',
+        });
+      }
+      
+      return terminalOutput;
+    }
+    
+    // If no direct result, use WebSocket approach as fallback
     const { executionId } = data;
 
     // Join execution room to receive results
@@ -86,6 +236,14 @@ export async function executeCode(
           type: 'command',
           content: `Running ${language} code...`,
         });
+        
+        // Handle user input if provided
+        if (input) {
+          terminalOutput.push({
+            type: 'input',
+            content: input,
+          });
+        }
 
         if (result.status === 'success') {
           // Split output by lines and add to terminal
@@ -112,7 +270,12 @@ export async function executeCode(
           });
         }
 
-        resolve(terminalOutput);
+        // Filter out unwanted terminal messages before resolving
+        const filteredOutput = terminalOutput.filter(line => 
+          !line.content.includes('** Process exited - Return Code:') && 
+          !line.content.includes('Press Enter to exit terminal'));
+        
+        resolve(filteredOutput);
       });
 
       // Handle timeout

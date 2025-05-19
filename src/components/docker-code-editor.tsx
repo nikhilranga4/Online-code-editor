@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Play, Loader2, RefreshCw, KeyboardIcon, User, Minimize2 } from 'lucide-react';
+import { Play, Loader2, RefreshCw,  User, Minimize2, BookOpen } from 'lucide-react';
 import { MonacoCodeEditor } from './monaco-code-editor';
 import { Terminal } from './terminal';
 import { InteractiveTerminal } from './interactive-terminal';
@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { predefinedSnippets } from '@/lib/predefined-snippets';
 import { AuthDialog } from './auth/auth-dialog';
 import { saveCodeSnippet, loadCodeSnippet } from '@/lib/code-storage-service';
+import { LearningPanel } from './learning-path/learning-panel';
 
 // Use predefined snippets from the imported file
 // These are more detailed examples for each language
@@ -31,6 +32,7 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
   const [output, setOutput] = useState<TerminalOutput[]>([]);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('output');
+  const [showLearningPanel, setShowLearningPanel] = useState<boolean>(false);
   const [terminalExpanded, setTerminalExpanded] = useState<boolean>(false);
   const [showPreview, setShowPreview] = useState<boolean>(false);
   const [userInput, setUserInput] = useState<string>('');
@@ -326,16 +328,15 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
             )}
           </Button>
           
-          {/* Input button - shows if code might need input */}
           <Button
-            onClick={() => setShowInputDialog(true)}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
-            title="Provide Input"
+            onClick={() => setShowLearningPanel(!showLearningPanel)}
+            className="flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 border-blue-300"
+            title="AI Learning Companion"
           >
-            <KeyboardIcon className="h-3.5 w-3.5" />
-            Input
+            <BookOpen className="h-4 w-4" />
+            {showLearningPanel ? 'Hide Learning' : 'AI Learning Companion'}
           </Button>
           
           <Button
@@ -345,7 +346,7 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
             className="flex items-center gap-2"
             title="Clear Output"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw className="h-4 w-4" />
             Clear
           </Button>
           
@@ -377,7 +378,19 @@ export function DockerCodeEditor({ className }: DockerCodeEditorProps) {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full min-h-[600px]">
+      <div className={`grid ${showLearningPanel ? 'grid-cols-1 lg:grid-cols-[540px_minmax(500px,_1fr)_minmax(300px,_1fr)]' : 'grid-cols-1 lg:grid-cols-2'} gap-4 h-full min-h-[600px]`}>
+        {showLearningPanel && (
+          <Card className="h-full min-h-[600px] overflow-hidden shadow-md border-muted">
+            <CardContent className="p-0 h-full">
+              <LearningPanel 
+                currentCode={code} 
+                language={language} 
+                onLoadChallenge={(challengeCode) => setCode(challengeCode)} 
+              />
+            </CardContent>
+          </Card>
+        )}
+        
         <Card className="h-full min-h-[600px] overflow-hidden shadow-md border-muted">
           <CardContent className="p-0 h-full">
             <MonacoCodeEditor 
